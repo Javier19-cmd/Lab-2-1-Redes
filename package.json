@@ -1,0 +1,19 @@
+{
+  "name": "lab-2-1-redes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Javier19-cmd/Lab-2-1-Redes.git"
+  },
+  "author": "Javier Valle - Javier Mombiela",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Javier19-cmd/Lab-2-1-Redes/issues"
+  },
+  "homepage": "https://github.com/Javier19-cmd/Lab-2-1-Redes#readme"
+}
