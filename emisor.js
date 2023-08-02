@@ -1,59 +1,83 @@
 const readline = require('readline');
 
-// Función para calcular el bit de paridad en una posición específica
-function calculateParityBit(data, pos) {
-  let count = 0;
-  for (let i = pos - 1; i < data.length; i += pos * 2) {
-    for (let j = 0; j < pos && i + j < data.length; j++) {
-      if (data[i + j] === "1") {
-        count++;
+function calculateParityBits(data, parityBitsCount) {
+  const result = [];
+  let dataIndex = 0;
+
+  for (let i = 1; i <= data.length + parityBitsCount; i++) {
+    if (i === Math.pow(2, result.length)) {
+      // Es un bit de paridad, inicialmente se establece en 0.
+      result.push(0);
+    } else {
+      result.push(parseInt(data.charAt(dataIndex++), 10));
+    }
+  }
+
+  for (let i = 0; i < parityBitsCount; i++) {
+    let parityBitIndex = Math.pow(2, i) - 1;
+    let parity = 0;
+
+    for (let j = parityBitIndex; j < result.length; j++) {
+      if (((j + 1) & (parityBitIndex + 1)) !== 0) {
+        parity ^= result[j];
       }
     }
+
+    result[parityBitIndex] = parity;
   }
-  return count % 2 === 0 ? "0" : "1";
+
+  return result.join('');
 }
 
-// Función para calcular los bits de paridad y agregarlos a los datos originales
-function addParityBits(data) {
-  const parityBits = [];
-  let pos = 1;
-  let newData = "";
+function hammingCorrect(data, resultLength) {
+  const dataLength = data.length;
+  const parityBitsCount = Math.ceil(Math.log2(dataLength + resultLength + 1));
 
-  // Insertar posiciones para los bits de paridad con valor '0'
-  for (let i = 0; i < data.length; i++) {
-    if (Math.pow(2, pos) === i + pos) {
-      newData += "0";
-      pos++;
+  // Calcular los bits de paridad para la cadena de entrada.
+  const calculatedParityBits = calculateParityBits(data, parityBitsCount);
+
+  // Simular un error en uno de los bits.
+  const errorBitIndex = Math.floor(Math.random() * (dataLength + resultLength));
+  calculatedParityBits[errorBitIndex] = (calculatedParityBits[errorBitIndex] ^ 1).toString();
+
+  // Calcular nuevamente los bits de paridad para detectar el bit erróneo.
+  const correctedParityBits = calculateParityBits(calculatedParityBits, parityBitsCount);
+
+  // Corregir el error si se detecta uno.
+  if (correctedParityBits !== calculatedParityBits) {
+    calculatedParityBits[errorBitIndex] = (calculatedParityBits[errorBitIndex] ^ 1).toString();
+  }
+
+  // Eliminar los bits de paridad y devolver la cadena corregida.
+  const correctedData = [];
+  let dataIndex = 0;
+  for (let i = 0; i < calculatedParityBits.length; i++) {
+    if (((i + 1) & (i + 1 - Math.pow(2, dataIndex))) !== 0) {
+      correctedData.push(calculatedParityBits[i]);
+    } else {
+      dataIndex++;
     }
-    newData += data[i];
   }
 
-  pos = 1;
-  while (Math.pow(2, pos) <= newData.length) {
-    const parityBit = calculateParityBit(newData, Math.pow(2, pos));
-    parityBits.push(parityBit);
-    pos++;
+  // Rellenar con NaN si falta la longitud de resultado especificada
+  while (correctedData.length < resultLength) {
+    correctedData.push("NaN");
   }
 
-  // Agregar bits de paridad al final de los datos originales
-  newData += parityBits.join("");
-
-  return newData;
+  return correctedData.join('');
 }
 
-// Función para leer la trama desde la consola y procesarla
-function readDataFromConsole() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-  rl.question("Ingrese la trama en binario (por ejemplo, '110101'): ", (trama) => {
+rl.question("Ingrese la cadena de bits: ", function(data) {
+  rl.question("Ingrese la longitud del resultado: ", function(resultLength) {
+    const correctedData = hammingCorrect(data, parseInt(resultLength, 10));
+
+    console.log("Cadena resultante corregida:", correctedData);
+
     rl.close();
-    const dataWithParity = addParityBits(trama);
-    console.log("Trama enviada: " + dataWithParity);
   });
-}
-
-// Llamamos a la función para leer la trama desde la consola
-readDataFromConsole();
+});
